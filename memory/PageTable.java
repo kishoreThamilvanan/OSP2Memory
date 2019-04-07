@@ -36,8 +36,13 @@ public class PageTable extends IflPageTable
     */
     public PageTable(TaskCB ownerTask)
     {
-        // your code goes here
-
+        super(ownerTask);
+       
+        // to construct a pagetable
+        int PageTableSize = (int) Math.pow(2, MMU.getPageAddressBits());
+        PageTableEntry pageTable = new PageTableEntry[PageTableSize]; 
+ 
+ 
     }
 
     /**
@@ -48,7 +53,9 @@ public class PageTable extends IflPageTable
     */
     public void do_deallocateMemory()
     {
-        // your code goes here
+        
+    	
+    	
 
     }
 

@@ -57,14 +57,33 @@ public class PageTableEntry extends IflPageTableEntry
     {
         
     
-    	if(isValid()){
+    	if(!isValid()){
+    		
+    		if(getValidatingThread() == null)
+    			handlePageFault(iorb.getThread(), MemoryLock, this);
     		
     		
     	} else {
     		
-    		// a page fault must be initiated.
+    		Thread Th2 = iorb.getThread();
+    		
+    		if(Th2 == getValidatingThread()){
+    			
+    			getFrame().incrementLockCount();
+    			return SUCCESS;
+    			
+    		} else{
+    			
+    			Th2.suspend(this));
+    			if(Th2.getStatus() == ThreadKill)
+    				return FAILURE;
+    		
+    		}
     	}
     	
+    	
+		getFrame().incrementLockCount();
+    	return SUCCESS;
     }
 
     /** This method decreases the lock count on the page by one. 
