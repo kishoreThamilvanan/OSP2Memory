@@ -35,6 +35,10 @@ public class MMU extends IflMMU
     public static void init()
     {
 
+      int i=-1;
+      while(++i<MMU.getFrameTableSize())
+        setFrame(i, new FrameTableEntry(i));
+
     	
     	
     	
@@ -59,11 +63,11 @@ public class MMU extends IflMMU
 
        @OSPProject Memory
     */
-    static public PageTableEntry do_refer(int memoryAddress,
-					  int referenceType, ThreadCB thread)
+    static public PageTableEntry do_refer(int memoryAddress, int referenceType, ThreadCB thread)
     {
-        // your code goes here
 
+
+        
     }
 
     /** Called by OSP after printing an error message. The student can

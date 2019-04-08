@@ -40,9 +40,13 @@ public class PageTable extends IflPageTable
        
         // to construct a pagetable
         int PageTableSize = (int) Math.pow(2, MMU.getPageAddressBits());
-        PageTableEntry pageTable = new PageTableEntry[PageTableSize]; 
+        pages = new PageTableEntry[PageTableSize]; 
  
- 
+ 		// initialization 
+        int i=-1;
+        while(++i < PageTableSize)
+        	pages[i] = new PageTableEntry(this, i);
+        	
     }
 
     /**
@@ -54,8 +58,26 @@ public class PageTable extends IflPageTable
     public void do_deallocateMemory()
     {
         
-    	
-    	
+    	TaskCB current_task = getTask();
+
+		int i=-1;
+		while(++i<MMU.getFrameTableSize()){
+
+			FrameTableEntry frame = MMU.getFrame(i);
+	    	PageTableEntry page = frame.getPage();
+
+	    	if(!frame)
+	    		if(task = getTask()){
+
+	    			frame.setPage(null);
+	    			frame.setDirty(false);
+	    			frame.setReferenced(false);
+
+	    			if(frame.getReserved() == t)
+	    				frame.setUnreserved(t);
+	    		}
+
+	    }
 
     }
 
