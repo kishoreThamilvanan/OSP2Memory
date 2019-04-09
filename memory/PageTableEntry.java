@@ -74,7 +74,7 @@ public class PageTableEntry extends IflPageTableEntry
     			
     		} else{
     			
-    			Th2.suspend(this));
+    			Th2.suspend(this);
     			if(Th2.getStatus() == ThreadKill)
     				return FAILURE;
     		
@@ -94,10 +94,8 @@ public class PageTableEntry extends IflPageTableEntry
     */
     public void do_unlock()
     {
-        
     	if(getFrame().getLockCount() > 0)
-    		getFrame().decrementLockCount();
-    	
+    		getFrame().decrementLockCount();	
     }
 
 

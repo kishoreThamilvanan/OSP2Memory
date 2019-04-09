@@ -39,9 +39,6 @@ public class MMU extends IflMMU
       while(++i<MMU.getFrameTableSize())
         setFrame(i, new FrameTableEntry(i));
 
-    	
-    	
-    	
     }
 
     /**
@@ -65,9 +62,41 @@ public class MMU extends IflMMU
     */
     static public PageTableEntry do_refer(int memoryAddress, int referenceType, ThreadCB thread)
     {
-
-
         
+        page_offset = getVirtualAddressBits() - getPageAddressBits();
+        page_size = ((int) Math.pow(2, page_offset));
+        page_number = memoryAddress/page_size;
+
+        PageTableEntry page = getPTBR().pages[page_number];
+
+        if(!page.isValid()){
+
+            if(getValidatingThread()){
+
+                thread.suspend(page);
+                if(thread.getStatus() ==  ThreadKill)
+                    return page;
+            } else {
+
+                page.pagefaulted = true;
+                setPage(page);
+                setInteruptType(referenceType);
+                setThread(thread);
+
+                CPU.interrupt(PageFault);
+
+                if(thread.getStatus() == ThreadKill)
+                    return page;
+            }
+        }
+
+        // page is assumed to be valid if the control reacher here.
+        page.getFrame().setDirty(true);
+
+        if(referenceType == MemoryWrite)
+            page.getFrame().setDirty(true);
+
+        return page;
     }
 
     /** Called by OSP after printing an error message. The student can
@@ -79,7 +108,7 @@ public class MMU extends IflMMU
      */
     public static void atError()
     {
-        System.out.print(this);
+
     }
 
     /** Called by OSP after printing a warning message. The student
@@ -91,8 +120,7 @@ public class MMU extends IflMMU
      */
     public static void atWarning()
     {
-    	System.out.print("\n\t\t\t*** Warning issued ***\n");
-        System.out.print(this);
+
     }
 
 
