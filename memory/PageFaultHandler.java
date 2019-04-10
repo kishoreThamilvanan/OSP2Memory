@@ -84,17 +84,25 @@ public class PageFaultHandler extends IflPageFaultHandler
     */
     public static int do_handlePageFault(ThreadCB thread, int referenceType, PageTableEntry page)
     {
-        // your code goes here
+
+        if(page.isValid())
+            return FAILURE;
+
+        FrameTableEntry frame = new FrameTableEntry();
+        frame = get_a_frame();
+
+        if(frame == null)
+            return NotEnoughMemory;
+
+
+
 
     }
 
+    public static FrameTableEntry get_a_frame(){
 
-    /*
-       Feel free to add methods/fields to improve the readability of your code
-    */
-
+        FrameTableEntry frame = null;
+    
+   
 }
 
-/*
-      Feel free to add local classes to improve the readability of your code
-*/
