@@ -94,15 +94,122 @@ public class PageFaultHandler extends IflPageFaultHandler
         if(frame == null)
             return NotEnoughMemory;
 
+        SystemEvent systemEvent = new SystemEvent("PageFaultHappened");
+        thread.suspend(systemEvent);
+
+        /*
+            now to reserve the suitable thread
+        */
+
+        frame.set Reserved(thread.getTask());
+        page.setValidatingThread(thread);
 
 
+        page.setFrame(frame);
+        /*
+            Swapping the pages.
+        */
+            TaskCB task = page.getTask();
+            task.getSwapFile().read(page.getID(), page, thread);
+
+
+        if(thread.getStatus() == ThreadKill){
+
+            if(frame.getPage() != null)
+                if(frame.getPage().getTask() == thread.getTask())
+                    frame.setPage(null);
+            
+
+            page.notifyThreads();
+            page.setValidatingThread(null);
+            page.setFrame(null);
+            event.notifyThreads();
+            ThreadCB.dispatch();
+
+            return FAILURE;
+        }
+
+        if(frame.getPage() != null){
+
+            PageTableEntry new_Page = frame.getPage();
+            
+           
+            if(frame.isDirty()){
+
+                //swap out
+                TaskCB task = frame.getPage().getTask();
+                task.getSwapFile().write(frame.getPage().getID(), frame.getPage, thread);
+
+                if(thread.getStatus() == ThreadKill){
+                    page.notifyThreads();
+                    systemEvent.notifyThreads();
+                    ThreadCB.dispatch();
+
+                    return FAILURE;
+                }
+
+                frame.setDirty(false);
+            }
+
+            frame.setReferenced(false);
+            frame.setPage(null);
+            new_page.setValid(false);
+            new_Page.setFrame(null);
+
+        }
+
+        frame.setPage(page);
+        page.setValid(true);
+
+        if(frame.getReserved() == thread.getTask())
+            frame.setUnreserved(thread.getTask());
+
+
+        page.setValidatingThread(null);
+        page.notifyThreads();
+        systemEvent.notifyThreads();
+        ThreadCB.dispatch();
+        return SUCCESS;
 
     }
+
+
 
     public static FrameTableEntry get_a_frame(){
 
         FrameTableEntry frame = null;
-    
+        
+        int i=-1;
+        while(++i<MMU.getFrameTableSize()){
+
+            frame = getFrame(i);
+
+            if((frame.getPage()==null) && (!frame.isReserved()) && (frame.getLockcount()==0))
+                return frame;
+        }
+
+         i=-1;
+        while(++i<MMU.getFrameTableSize()){
+
+            frame = getFrame(i);
+
+            if((!frame.isDirty()) && (!frame.isReserved()) && (frame.getLockcount()==0))
+                return frame;
+        }
+
+        i=-1;
+        while(++i<MMU.getFrameTableSize()){
+
+            frame = getFrame(i);
+
+            if((!frame.isReserved()) && (frame.getLockcount()==0))
+                return frame;
+        }   
+
+        return MMU.getFrame(MMU.getFrameTableSize() - 1);     
+    }
+
+
    
 }
 
