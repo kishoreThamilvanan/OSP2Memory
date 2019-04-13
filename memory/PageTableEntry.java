@@ -60,12 +60,12 @@ public class PageTableEntry extends IflPageTableEntry
     	if(!isValid()){
     		
     		if(getValidatingThread() == null)
-    			handlePageFault(iorb.getThread(), MemoryLock, this);
+    			PageFaultHandler.handlePageFault(iorb.getThread(), MemoryLock, this);
     		
     		
     	} else {
     		
-    		Thread Th2 = iorb.getThread();
+    		ThreadCB Th2 = iorb.getThread();
     		
     		if(Th2 == getValidatingThread()){
     			

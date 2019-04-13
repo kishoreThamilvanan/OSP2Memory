@@ -88,7 +88,7 @@ public class PageFaultHandler extends IflPageFaultHandler
         if(page.isValid())
             return FAILURE;
 
-        FrameTableEntry frame = new FrameTableEntry();
+        FrameTableEntry frame = null;
         frame = get_a_frame();
 
         if(frame == null)
@@ -101,7 +101,7 @@ public class PageFaultHandler extends IflPageFaultHandler
             now to reserve the suitable thread
         */
 
-        frame.set Reserved(thread.getTask());
+        frame.setReserved(thread.getTask());
         page.setValidatingThread(thread);
 
 
@@ -123,7 +123,7 @@ public class PageFaultHandler extends IflPageFaultHandler
             page.notifyThreads();
             page.setValidatingThread(null);
             page.setFrame(null);
-            event.notifyThreads();
+            systemEvent.notifyThreads();
             ThreadCB.dispatch();
 
             return FAILURE;
@@ -137,8 +137,8 @@ public class PageFaultHandler extends IflPageFaultHandler
             if(frame.isDirty()){
 
                 //swap out
-                TaskCB task = frame.getPage().getTask();
-                task.getSwapFile().write(frame.getPage().getID(), frame.getPage, thread);
+                TaskCB swap_task = frame.getPage().getTask();
+                swap_task.getSwapFile().write(frame.getPage().getID(), frame.getPage(), thread);
 
                 if(thread.getStatus() == ThreadKill){
                     page.notifyThreads();
@@ -153,7 +153,7 @@ public class PageFaultHandler extends IflPageFaultHandler
 
             frame.setReferenced(false);
             frame.setPage(null);
-            new_page.setValid(false);
+            new_Page.setValid(false);
             new_Page.setFrame(null);
 
         }
@@ -182,27 +182,27 @@ public class PageFaultHandler extends IflPageFaultHandler
         int i=-1;
         while(++i<MMU.getFrameTableSize()){
 
-            frame = getFrame(i);
+            frame = MMU.getFrame(i);
 
-            if((frame.getPage()==null) && (!frame.isReserved()) && (frame.getLockcount()==0))
+            if((frame.getPage()==null) && (!frame.isReserved()) && (frame.getLockCount()==0))
                 return frame;
         }
 
          i=-1;
         while(++i<MMU.getFrameTableSize()){
 
-            frame = getFrame(i);
+            frame = MMU.getFrame(i);
 
-            if((!frame.isDirty()) && (!frame.isReserved()) && (frame.getLockcount()==0))
+            if((!frame.isDirty()) && (!frame.isReserved()) && (frame.getLockCount()==0))
                 return frame;
         }
 
         i=-1;
         while(++i<MMU.getFrameTableSize()){
 
-            frame = getFrame(i);
+            frame = MMU.getFrame(i);
 
-            if((!frame.isReserved()) && (frame.getLockcount()==0))
+            if((!frame.isReserved()) && (frame.getLockCount()==0))
                 return frame;
         }   
 

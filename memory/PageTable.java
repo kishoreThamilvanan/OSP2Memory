@@ -66,19 +66,17 @@ public class PageTable extends IflPageTable
 			FrameTableEntry frame = MMU.getFrame(i);
 	    	PageTableEntry page = frame.getPage();
 
-	    	if(!frame)
-	    		if(task = getTask()){
+	    	if(frame != null)
+	    		if(current_task == getTask()){
 
 	    			frame.setPage(null);
 	    			frame.setDirty(false);
 	    			frame.setReferenced(false);
 
-	    			if(frame.getReserved() == t)
-	    				frame.setUnreserved(t);
+	    			if(frame.getReserved() == current_task)
+	    				frame.setUnreserved(current_task);
 	    		}
-
 	    }
-
     }
 
 

@@ -63,26 +63,36 @@ public class MMU extends IflMMU
     static public PageTableEntry do_refer(int memoryAddress, int referenceType, ThreadCB thread)
     {
         
-        page_offset = getVirtualAddressBits() - getPageAddressBits();
-        page_size = ((int) Math.pow(2, page_offset));
-        page_number = memoryAddress/page_size;
+        int page_offset = getVirtualAddressBits() - getPageAddressBits();
+        int page_size = ((int) Math.pow(2, page_offset));
+        int page_number = memoryAddress/page_size;
 
         PageTableEntry page = getPTBR().pages[page_number];
 
         if(!page.isValid()){
 
-            if(getValidatingThread()){
+            /*
+                Page fault occured because of another thread which is not the current thread.
+                    therefore we suspend the thread.
+            */
+            if(page.getValidatingThread() != null){
 
+                // suspend the thread
                 thread.suspend(page);
+
+                // if the thread is killed in the waiting time, then return the page
                 if(thread.getStatus() ==  ThreadKill)
                     return page;
+
             } else {
 
-                page.pagefaulted = true;
-                setPage(page);
-                setInteruptType(referenceType);
-                setThread(thread);
+                //set the page fault variable to be true.
+                // page.pageFaulted = true;
+                InterruptVector.setPage(page);
+                InterruptVector.setInterruptType(referenceType);
+                InterruptVector.setThread(thread);
 
+                // introduce the pagefault interupt
                 CPU.interrupt(PageFault);
 
                 if(thread.getStatus() == ThreadKill)
