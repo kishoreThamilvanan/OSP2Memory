@@ -87,7 +87,7 @@ public class MMU extends IflMMU
             } else {
 
                 //set the page fault variable to be true.
-                // page.pageFaulted = true;
+            	page.pageFaulted = true;
                 InterruptVector.setPage(page);
                 InterruptVector.setInterruptType(referenceType);
                 InterruptVector.setThread(thread);
