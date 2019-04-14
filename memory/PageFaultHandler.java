@@ -143,17 +143,17 @@ public class PageFaultHandler extends IflPageFaultHandler {
 				
 					if (frame.isDirty()) {
 	
-						if (thread.getStatus() == ThreadKill) {
-	
-							page.notifyThreads();
-							systemEvent.notifyThreads();
-							ThreadCB.dispatch();
-							return FAILURE;
-						} 
-	
 							// swap out
 							TaskCB swap_task = frame.getPage().getTask();
 							swap_task.getSwapFile().write(new_Page.getID(), new_Page, thread);
+							
+							if (thread.getStatus() == ThreadKill) {
+								
+								page.notifyThreads();
+								systemEvent.notifyThreads();
+								ThreadCB.dispatch();
+								return FAILURE;
+							} 
 							
 							frame.setDirty(false);
 							frame.setReferenced(false);
@@ -163,7 +163,7 @@ public class PageFaultHandler extends IflPageFaultHandler {
 							new_Page.setFrame(null);					
 						
 	
-					} else if (new_Page != null) {
+					} else if (new_Page != null || !frame.isDirty()) {
 	
 						frame.setReferenced(false);
 						frame.setDirty(false);
@@ -177,30 +177,31 @@ public class PageFaultHandler extends IflPageFaultHandler {
 							if(frame.getLockCount() == 0)
 								frame.setPage(null);
 					}
+					
+					page.setFrame(frame);
+					
+					/*
+					 * Swapping in the pages.
+					 */
+					TaskCB task = page.getTask();
+					task.getSwapFile().read(page.getID(), page, thread);
+					
+					if (thread.getStatus() == ThreadKill) {
+						if (frame.getPage() != null)
+							if (frame.getPage().getTask() == thread.getTask())
+								frame.setPage(null);
+		
+						page.notifyThreads();
+						page.setValidatingThread(null);
+						page.setFrame(null);
+		
+						systemEvent.notifyThreads();
+						ThreadCB.dispatch();
+						return FAILURE;
+					}
+					
 				}
 	
-				
-				page.setFrame(frame);
-	
-				/*
-				 * Swapping in the pages.
-				 */
-				TaskCB task = page.getTask();
-				task.getSwapFile().read(page.getID(), page, thread);
-				
-				if (thread.getStatus() == ThreadKill) {
-					if (frame.getPage() != null)
-						if (frame.getPage().getTask() == thread.getTask())
-							frame.setPage(null);
-	
-					page.notifyThreads();
-					page.setValidatingThread(null);
-					page.setFrame(null);
-	
-					systemEvent.notifyThreads();
-					ThreadCB.dispatch();
-					return FAILURE;
-				}
 
 		} catch (NullPointerException e) {
 		}
